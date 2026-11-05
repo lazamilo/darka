@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="sl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ponudba, Trgovina Darka</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/styles.css?v=7">
+</head>
+<body data-page="ponudba">
+<main>
+  <section class="phero">
+    <h1 class="display rv">Ponudba</h1>
+    <p class="lead muted rv">Vse, kar imamo ta hip v trgovini. Cene so v evrih z DDV. Izdelek rezervirajte po telefonu ali e-pošti, pripravimo in zavijemo ga do vašega prihoda.</p>
+  </section>
+  <div class="tabs" id="tabs"></div>
+  <div class="subs" id="subs"></div>
+  <div class="notice rv"><p>Spletna trgovina je v prenovi. Za naročilo nas pokličite ali nam pišite, z veseljem vam svetujemo.</p><a class="btn btn-ink" href="tel:+38631586122">031 586 122 <span class="arr">→</span></a></div>
+  <div class="grid" id="grid"></div>
+</main>
+<script src="assets/js/gsap.min.js"></script>
+<script src="assets/js/ScrollTrigger.min.js"></script>
+<script src="assets/js/lenis.min.js"></script>
+<script src="assets/js/products.js?v=7"></script>
+<script src="assets/js/site.js?v=7"></script>
+<script src="assets/js/shop.js?v=7"></script>
+<script>
+(() => {
+  const { all, card } = window.DarkaShop;
+  const order = ['Vse', 'Aktualno', 'Darilni program', 'Poslovna darila', 'Igrače', 'Nakit', 'Ure', 'Aranžirana darila', 'Kozmetika', 'Galanterija'];
+  const count = c => c === 'Vse' ? all.length : all.filter(p => p.c === c).length;
+  const tabs = document.getElementById('tabs'), subs = document.getElementById('subs'), grid = document.getElementById('grid');
+  tabs.innerHTML = order.filter(c => count(c)).map(c => `<button class="tab" data-c="${c}">${c}<sup>${count(c)}</sup></button>`).join('');
+
+  let cat = 'Vse', sub = '';
+  const render = () => {
+    tabs.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.c === cat));
+    const inCat = cat === 'Vse' ? all : all.filter(p => p.c === cat);
+    const ss = [...new Set(inCat.map(p => p.s).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sl'));
+    subs.innerHTML = ss.length > 1 ? ['', ...ss].map(s => `<button class="chip${s === sub ? ' on' : ''}" data-s="${s}">${s || 'Vse'}</button>`).join('') : '';
+    const list = sub ? inCat.filter(p => p.s === sub) : inCat;
+    grid.innerHTML = list.map(card).join('');
+    if (window.gsap && !window.DARKA.reduced) {
+      gsap.fromTo(grid.children, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .8, stagger: { each: .03, amount: .6 }, ease: 'expo.out' });
+      ScrollTrigger.refresh();
+    }
+  };
+  const fromHash = () => {
+    const [c, s] = decodeURIComponent(location.hash.slice(1)).split('/');
+    cat = order.includes(c) ? c : 'Vse'; sub = s || '';
+    render();
+  };
+  tabs.addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) { history.replaceState(null, '', '#' + encodeURIComponent(t.dataset.c)); cat = t.dataset.c; sub = ''; render(); } });
+  subs.addEventListener('click', e => { const t = e.target.closest('.chip'); if (t) { sub = t.dataset.s; history.replaceState(null, '', '#' + encodeURIComponent(cat) + (sub ? '/' + encodeURIComponent(sub) : '')); render(); } });
+  addEventListener('hashchange', fromHash);
+  fromHash();
+})();
+</script>
+</body>
+</html>
